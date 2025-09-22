@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AASHVI - Real AI Chatbot</title>
+  <style>
+    body {background:linear-gradient(120deg,#110d2e 55%,#16327e 100%);
+      min-height:100vh; margin:0; font-family:sans-serif; color:#fff;}
+    .container {max-width:440px;margin:6vh auto;padding:25px 18px 16px 18px;
+      background:rgba(23,12,55,0.97);border-radius:25px;
+      box-shadow:0 7px 40px #19f7ee44;border:2.7px solid #25d4f5a4;}
+    .jarvis3d {text-align:center; font-size:2.5em; font-weight: bold; letter-spacing:3.5px;
+      background: linear-gradient(90deg,#27fff7,#fff400 80%);
+      color: transparent;-webkit-background-clip: text;background-clip: text;
+      text-shadow:0 2px 20px #7cff5844,0 6px 50px #00fff755,0 2px 20px #27ffe7;
+      animation: glow 2s infinite alternate;}
+    @keyframes glow {from{ text-shadow:0 3px 30px #00fff7,0 5px 25px #fff71088;}
+      to{ text-shadow:0 2px 68px #fff80044,0 18px 100px #00fff7;}}
+    .intro,.bot{color:#8affff;}
+    .msg {margin:10px 0;}
+    .me {color:#ffd92e; font-weight:bold;}
+    .bot {font-weight:600;}
+    .inputbar {width:66%;padding:11px;border-radius:7px;border:none;background:#162363;color:#99ebff;}
+    .sendbtn,.micbtn,.speakbtn {border-radius:8px;
+      background:linear-gradient(120deg,#b2fffc 60%,#1cffc3 100%);
+      color:#112a34; font-weight:bold;font-size:1.1em;border:none;font-family:monospace;
+      margin-left:7px; padding:10px 17px; cursor:pointer;box-shadow:0 2px 13px #18fff944;}
+    .micbtn {font-size:1.16em; padding:10px 12px;}
+    .speakbtn {font-size:1em; padding:10px 10px;}
+    #chat {max-height:210px;overflow-y:auto;}
+    #activitylog {font-size:0.92em;background:rgba(9,47,63,.88);color:#66fff8;
+      margin-top:10px;border-radius:10px;padding:7px 8px 7px 12px;max-height:65px;overflow:auto;font-family:monospace;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="jarvis3d">AASHVI</div>
+  <div class="intro bot msg">Hi Avinash, मैं तुम्हारी real AI-assistant हूँ. Type karo/bolo, smart jawab + log + voice sab milega!</div>
+  <div id="chat"></div>
+  <input class="inputbar" id="q" placeholder="Type or Speak...">
+  <button class="micbtn" onclick="startMic()">🎤</button>
+  <button class="sendbtn" onclick="sendMsg()">Send</button>
+  <button class="speakbtn" onclick="speakLast()">🔊</button>
+  <div id="activitylog"></div>
+</div>
+<script src="https://js.puter.com/v2/"></script>
+<script>
+let logs=[];
+function logActivity(role,msg){
+  let t=new Date().toLocaleTimeString();
+  logs.push({t,who:role,txt:msg});
+  document.getElementById('activitylog').textContent=JSON.stringify(logs.slice(-6),null,2);
+}
+function addMsg(text,user){
+  let chat=document.getElementById("chat");
+  let tag=document.createElement("div");
+  tag.className=user=="me"?"me msg":"bot msg";
+  tag.textContent=(user=="me"?"Avinash: ":"AASHVI: ") + text;
+  chat.appendChild(tag); chat.scrollTop=chat.scrollHeight;
+  logActivity(user=="me"?"Avinash":"AI", text);
+}
+let lastBot="";
+async function sendMsg(){
+  let q=document.getElementById("q").value.trim();
+  if(!q) return; addMsg(q,"me"); document.getElementById("q").value="";
+  try{
+    let ai=await puter.ai.sendMessage(q);
+    if(ai && ai.text){ addMsg(ai.text,"bot"); lastBot=ai.text;}
+    else{addMsg("❌ Error!","bot"); lastBot="";}
+  }catch(e){ addMsg("❌ API Error!","bot"); lastBot="";}
+}
+function startMic(){
+  try{
+    var r = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var rec = new r();
+    rec.lang='hi-IN'; rec.start();
+    rec.onresult=function(e){ document.getElementById("q").value=e.results[0][0].transcript; };
+    rec.onerror=function(){ addMsg("Mic kaha Ha","me"); addMsg("❌ Error!","bot"); };
+  }catch(e){ addMsg("Mic not supported!","bot"); }
+}
+function speakLast(){
+  try{
+    if(lastBot){
+      let synth=window.speechSynthesis;
+      let utter=new SpeechSynthesisUtterance(lastBot); utter.lang="hi-IN";
+      synth.cancel(); synth.speak(utter);
+    }else{alert('No reply to speak!');}
+  }catch(e){alert('TTS not supported!');}
+}
+</script>
+</body>
+</html>
